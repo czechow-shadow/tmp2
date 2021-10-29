@@ -28,12 +28,13 @@
  * writing filesystem drivers for Linux.
  */
 
+
 #include "vfsmod.h"
 #include "version-generated.h"
 #include "revision-generated.h"
 #include "product-generated.h"
 #include "VBoxGuestR0LibInternal.h"
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) || defined(RHEL_84)
 # include <uapi/linux/mount.h> /* for MS_REMOUNT */
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
 # include <linux/mount.h>

@@ -463,6 +463,9 @@ DECLHIDDEN(void) rtR0LnxWorkqueueFlush(void);
 # if RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8, 2)
 #  define RHEL_82
 # endif
+# if RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8, 4)
+#  define RHEL_84
+# endif
 #endif
 
 #endif
