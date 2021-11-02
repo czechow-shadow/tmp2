@@ -43,8 +43,7 @@ static void vbox_user_framebuffer_destroy(struct drm_framebuffer *fb)
 	struct vbox_framebuffer *vbox_fb = to_vbox_framebuffer(fb);
 
 	if (vbox_fb->obj)
-		drm_gem_object_put_unlocked(vbox_fb->obj);
-
+	  drm_gem_object_put(vbox_fb->obj); // PCZ: was: drm_gem_object_put_unlocked(vbox_fb->obj);
 	drm_framebuffer_cleanup(fb);
 	kfree(fb);
 }
@@ -209,13 +208,13 @@ static struct drm_framebuffer *vbox_user_framebuffer_create(
 
 	vbox_fb = kzalloc(sizeof(*vbox_fb), GFP_KERNEL);
 	if (!vbox_fb) {
-		drm_gem_object_put_unlocked(obj);
+		drm_gem_object_put(obj); // PCZ: was: drm_gem_object_put_unlocked(obj);
 		return ERR_PTR(-ENOMEM);
 	}
 
 	ret = vbox_framebuffer_init(dev, vbox_fb, mode_cmd, obj);
 	if (ret) {
-		drm_gem_object_put_unlocked(obj);
+		drm_gem_object_put(obj); // PCZ: was: drm_gem_object_put_unlocked(obj);
 		kfree(vbox_fb);
 		return ERR_PTR(ret);
 	}
@@ -428,7 +427,7 @@ static void vbox_hw_fini(struct vbox_private *vbox)
 	vbox->last_mode_hints = NULL;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0)
+#if 0 // LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0)
 int vbox_driver_load(struct drm_device *dev, unsigned long flags)
 #else
 int vbox_driver_load(struct drm_device *dev)
@@ -570,7 +569,7 @@ int vbox_dumb_create(struct drm_file *file,
 		return ret;
 
 	ret = drm_gem_handle_create(file, gobj, &handle);
-	drm_gem_object_put_unlocked(gobj);
+	drm_gem_object_put(gobj); // PCZ: was: drm_gem_object_put_unlocked(gobj);
 	if (ret)
 		return ret;
 
@@ -603,7 +602,7 @@ void vbox_gem_free_object(struct drm_gem_object *obj)
 
 static inline u64 vbox_bo_mmap_offset(struct vbox_bo *bo)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+#if 1 // PCZ: LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
 		return drm_vma_node_offset_addr(&bo->bo.base.vma_node);
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 12, 0) && !defined(RHEL_70)
 	return bo->bo.addr_space_offset;

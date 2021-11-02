@@ -372,7 +372,11 @@ static void vbox_fbdev_destroy(struct drm_device *dev, struct vbox_fbdev *fbdev)
 				vbox_bo_unpin(bo);
 			vbox_bo_unreserve(bo);
 		}
+#if 1 // PCZ RTLNX_VER_MIN(5,9,0) || RTLNX_RHEL_MIN(8,4)
+		drm_gem_object_put(afb->obj);
+#else
 		drm_gem_object_put_unlocked(afb->obj);
+#endif
 		afb->obj = NULL;
 	}
 	drm_fb_helper_fini(&fbdev->helper);
@@ -401,7 +405,7 @@ int vbox_fbdev_init(struct drm_device *dev)
 #else
 	drm_fb_helper_prepare(dev, &fbdev->helper, &vbox_fb_helper_funcs);
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
+#if 1 // PCZ LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
 		ret = drm_fb_helper_init(dev, &fbdev->helper);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0) || defined(RHEL_75)
 	ret = drm_fb_helper_init(dev, &fbdev->helper, vbox->num_crtcs);
@@ -413,8 +417,8 @@ int vbox_fbdev_init(struct drm_device *dev)
 	if (ret)
 		goto free;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0)
-	ret = drm_fb_helper_single_add_all_connectors(&fbdev->helper);
+#if 0 // PCZ LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0)
+	drm_fb_helper_single_add_all_connectors(&fbdev->helper);
 	if (ret)
 		goto fini;
 #endif
