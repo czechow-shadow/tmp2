@@ -62,7 +62,7 @@ static int vbox_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 #else
 		struct drm_device *dev = NULL;
 		int ret = 0;
-
+		SCB_DEBUG_BEG();
 		dev = drm_dev_alloc(&driver, &pdev->dev);
 		if (IS_ERR(dev)) {
 				ret = PTR_ERR(dev);
@@ -78,6 +78,7 @@ static int vbox_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		ret = drm_dev_register(dev, 0);
 		if (ret)
 				goto err_drv_dev_register;
+		SCB_DEBUG_END();
 		return ret;
 
 err_drv_dev_register:
@@ -344,7 +345,9 @@ static struct drm_driver driver = {
 
 static int __init vbox_init(void)
 {
-  printk("vboxvideo: loading version [PCZ] " VBOX_VERSION_STRING "\n"); // PCZ
+        int ret;
+        SCB_DEBUG_BEG();
+        printk("vboxvideo: loading version [%s]\n", VBOX_VERSION_STRING);
 #if defined(CONFIG_VGA_CONSOLE) || LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
 	if (vgacon_text_force() && vbox_modeset == -1)
 		return -EINVAL;
@@ -353,11 +356,14 @@ static int __init vbox_init(void)
 	if (vbox_modeset == 0)
 		return -EINVAL;
 
-	return pci_register_driver(&vbox_pci_driver);
+	ret = pci_register_driver(&vbox_pci_driver);
+        SCB_DEBUG_END();
+	return ret;
 }
 
 static void __exit vbox_exit(void)
 {
+        SCB_DEBUG();
 	pci_unregister_driver(&vbox_pci_driver);
 }
 
