@@ -62,7 +62,7 @@ static int vbox_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 #else
 		struct drm_device *dev = NULL;
 		int ret = 0;
-
+		SCB_DEBUG_BEG();
 		dev = drm_dev_alloc(&driver, &pdev->dev);
 		if (IS_ERR(dev)) {
 				ret = PTR_ERR(dev);
@@ -78,6 +78,7 @@ static int vbox_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		ret = drm_dev_register(dev, 0);
 		if (ret)
 				goto err_drv_dev_register;
+		SCB_DEBUG_END();
 		return ret;
 
 err_drv_dev_register:
@@ -355,11 +356,14 @@ static int __init vbox_init(void)
 	if (vbox_modeset == 0)
 		return -EINVAL;
 
-	return pci_register_driver(&vbox_pci_driver);
+	ret = pci_register_driver(&vbox_pci_driver);
+        SCB_DEBUG_END();
+	return ret;
 }
 
 static void __exit vbox_exit(void)
 {
+        SCB_DEBUG();
 	pci_unregister_driver(&vbox_pci_driver);
 }
 

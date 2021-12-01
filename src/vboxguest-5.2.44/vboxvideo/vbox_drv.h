@@ -135,6 +135,8 @@
 
 #include "product-generated.h"
 
+#include "scb.h"
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0) && !defined(RHEL_75)
 static inline void drm_gem_object_put_unlocked(struct drm_gem_object *obj)
 {
@@ -174,7 +176,7 @@ static inline void drm_gem_object_put(struct drm_gem_object *obj)
 #define HOST_FLAGS_OFFSET GUEST_HEAP_USABLE_SIZE
 
 /** How frequently we refresh if the guest is not providing dirty rectangles. */
-#define VBOX_REFRESH_PERIOD (HZ / 2)
+#define VBOX_REFRESH_PERIOD (10 * (HZ / 2))
 
 struct vbox_fbdev;
 

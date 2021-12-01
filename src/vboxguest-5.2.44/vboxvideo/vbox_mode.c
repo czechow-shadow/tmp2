@@ -487,6 +487,8 @@ static void vbox_set_edid(struct drm_connector *connector, int width,
 	int clock = (width + 6) * (height + 6) * 60 / 10000;
 	unsigned int i, sum = 0;
 
+	SCB_DEBUG("Setting edid");
+
 	edid[12] = width & 0xff;
 	edid[13] = width >> 8;
 	edid[14] = height & 0xff;
@@ -514,6 +516,8 @@ static int vbox_get_modes(struct drm_connector *connector)
 	struct vbox_private *vbox = NULL;
 	unsigned int num_modes = 0;
 	int preferred_width, preferred_height;
+	SCB_DEBUG_BEG();
+	SCB_DEBUG("*core mode setting*");
 
 	vbox_connector = to_vbox_connector(connector);
 	vbox = connector->dev->dev_private;
@@ -538,6 +542,7 @@ static int vbox_get_modes(struct drm_connector *connector)
 			vbox->initial_mode_queried = true;
 			vbox_report_hotplug(vbox);
 		}
+		SCB_DEBUG("early end");
 		return drm_add_modes_noedid(connector, 800, 600);
 	}
 	/* Also assume that a client which supports hot-plugging also knows
@@ -576,6 +581,7 @@ static int vbox_get_modes(struct drm_connector *connector)
 			vbox->dev->mode_config.suggested_y_property, 0);
 #endif
 
+	SCB_DEBUG_END();
 	return num_modes;
 }
 

@@ -42,10 +42,12 @@ static void vbox_user_framebuffer_destroy(struct drm_framebuffer *fb)
 {
 	struct vbox_framebuffer *vbox_fb = to_vbox_framebuffer(fb);
 
+	SCB_DEBUG_BEG();
 	if (vbox_fb->obj)
 	  drm_gem_object_put(vbox_fb->obj); // PCZ: was: drm_gem_object_put_unlocked(vbox_fb->obj);
 	drm_framebuffer_cleanup(fb);
 	kfree(fb);
+	SCB_DEBUG_END();
 }
 
 void vbox_enable_accel(struct vbox_private *vbox)
@@ -53,6 +55,7 @@ void vbox_enable_accel(struct vbox_private *vbox)
 	unsigned int i;
 	struct VBVABUFFER *vbva;
 
+	SCB_DEBUG_BEG();
 	if (!vbox->vbva_info || !vbox->vbva_buffers) {
 		/* Should never happen... */
 		DRM_ERROR("vboxvideo: failed to set up VBVA.\n");
@@ -72,23 +75,29 @@ void vbox_enable_accel(struct vbox_private *vbox)
 			}
 		}
 	}
+	SCB_DEBUG_END();
 }
 
 void vbox_disable_accel(struct vbox_private *vbox)
 {
 	unsigned int i;
 
+	SCB_DEBUG_BEG();
 	for (i = 0; i < vbox->num_crtcs; ++i)
 		vbva_disable(&vbox->vbva_info[i], vbox->guest_pool, i);
+	SCB_DEBUG_END();
 }
 
 void vbox_report_caps(struct vbox_private *vbox)
 {
 	u32 caps = VBVACAPS_DISABLE_CURSOR_INTEGRATION
 	    | VBVACAPS_IRQ | VBVACAPS_USE_VBVA_ONLY;
+	SCB_DEBUG_BEG();
 	if (vbox->initial_mode_queried)
 		caps |= VBVACAPS_VIDEO_MODE_HINTS;
+	SCB_DEBUG("sending caps: %d", caps);
 	hgsmi_send_caps_info(vbox->guest_pool, caps);
+	SCB_DEBUG_END();
 }
 
 /**
@@ -197,6 +206,7 @@ static struct drm_framebuffer *vbox_user_framebuffer_create(
 	struct drm_gem_object *obj;
 	struct vbox_framebuffer *vbox_fb;
 	int ret;
+	SCB_DEBUG_BEG();
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0) || defined(RHEL_74)
 	obj = drm_gem_object_lookup(filp, mode_cmd->handles[0]);
@@ -219,6 +229,7 @@ static struct drm_framebuffer *vbox_user_framebuffer_create(
 		return ERR_PTR(ret);
 	}
 
+	SCB_DEBUG_END();
 	return &vbox_fb->base;
 }
 
@@ -348,19 +359,22 @@ static void vbox_refresh_timer(struct work_struct *work)
 												 refresh_work.work);
 	bool have_unblanked = false;
 	struct drm_crtc *crtci;
+	SCB_DEBUG("TIMER TRIGGERED");
+	schedule_work(&vbox->hotplug_work);
 
-	if (!vbox->need_refresh_timer)
-		return;
-	list_for_each_entry(crtci, &vbox->dev->mode_config.crtc_list, head) {
-		struct vbox_crtc *vbox_crtc = to_vbox_crtc(crtci);
-		if (crtci->enabled && !vbox_crtc->blanked)
-			have_unblanked = true;
-	}
-	if (!have_unblanked)
-		return;
-	/* This forces a full refresh. */
-	vbox_enable_accel(vbox);
-	/* Schedule the next timer iteration. */
+  // FIXME: NOW
+	/* if (!vbox->need_refresh_timer) */
+	/* 	return; */
+	/* list_for_each_entry(crtci, &vbox->dev->mode_config.crtc_list, head) { */
+	/* 	struct vbox_crtc *vbox_crtc = to_vbox_crtc(crtci); */
+	/* 	if (crtci->enabled && !vbox_crtc->blanked) */
+	/* 		have_unblanked = true; */
+	/* } */
+	/* if (!have_unblanked) */
+	/* 	return; */
+	/* /\* This forces a full refresh. *\/ */
+	/* vbox_enable_accel(vbox); */
+	/* /\* Schedule the next timer iteration. *\/ */
 	schedule_delayed_work(&vbox->refresh_work, VBOX_REFRESH_PERIOD);
 }
 
@@ -372,6 +386,7 @@ static int vbox_hw_init(struct vbox_private *vbox)
 {
 	int ret;
 
+	SCB_DEBUG_BEG();
 	vbox->full_vram_size = VBoxVideoGetVRAMSize();
 	vbox->any_pitch = VBoxVideoAnyWidthAllowed();
 
@@ -415,6 +430,7 @@ static int vbox_hw_init(struct vbox_private *vbox)
 		return ret;
 	/* Set up the refresh timer for users which do not send dirty rectangles. */
 	INIT_DELAYED_WORK(&vbox->refresh_work, vbox_refresh_timer);
+	SCB_DEBUG_END();
 	return 0;
 }
 
@@ -435,6 +451,7 @@ int vbox_driver_load(struct drm_device *dev)
 {
 	struct vbox_private *vbox;
 	int ret = 0;
+	SCB_DEBUG_BEG();
 
 	if (!VBoxHGSMIIsSupported())
 		return -ENODEV;
@@ -477,6 +494,7 @@ int vbox_driver_load(struct drm_device *dev)
 	if (ret)
 		goto out_free;
 
+	SCB_DEBUG_END();
 	return 0;
 
 out_free:

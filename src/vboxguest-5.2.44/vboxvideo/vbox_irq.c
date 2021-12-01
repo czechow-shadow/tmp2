@@ -61,6 +61,7 @@ irqreturn_t vbox_irq_handler(int irq, void *arg)
 	struct vbox_private *vbox = (struct vbox_private *)dev->dev_private;
 	u32 host_flags = vbox_get_flags(vbox);
 
+	SCB_DEBUG_BEG();
 	if (!(host_flags & HGSMIHOSTFLAGS_IRQ))
 		return IRQ_NONE;
 
@@ -77,6 +78,7 @@ irqreturn_t vbox_irq_handler(int irq, void *arg)
 
 	vbox_clear_irq();
 
+	SCB_DEBUG_END();
 	return IRQ_HANDLED;
 }
 
@@ -138,6 +140,7 @@ static void vbox_update_mode_hints(struct vbox_private *vbox)
 	bool disconnected;
 	unsigned int crtc_id;
 	int rc;
+	SCB_DEBUG_BEG();
 
 	rc = hgsmi_get_mode_hints(vbox->guest_pool, vbox->num_crtcs,
 				   vbox->last_mode_hints);
@@ -185,15 +188,18 @@ static void vbox_update_mode_hints(struct vbox_private *vbox)
 #else
 	mutex_unlock(&dev->mode_config.mutex);
 #endif
+        SCB_DEBUG_END();
 }
 
 static void vbox_hotplug_worker(struct work_struct *work)
 {
 	struct vbox_private *vbox = container_of(work, struct vbox_private,
 						 hotplug_work);
+        SCB_DEBUG_BEG();
 
 	vbox_update_mode_hints(vbox);
 	drm_kms_helper_hotplug_event(vbox->dev);
+	SCB_DEBUG_END();
 }
 
 int vbox_irq_init(struct vbox_private *vbox)
