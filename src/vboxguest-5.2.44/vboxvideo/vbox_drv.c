@@ -251,7 +251,7 @@ static void vbox_master_set(struct drm_device *dev, // PCZ: changed
 			   struct drm_file *file_priv, bool from_open)
 {
 	struct vbox_private *vbox = dev->dev_private;
-
+	SCB_DEBUG_BEG();
 	/*
 	 * We do not yet know whether the new owner can handle hotplug, so we
 	 * do not advertise dynamic modes on the first query and send a
@@ -264,7 +264,9 @@ static void vbox_master_set(struct drm_device *dev, // PCZ: changed
 	 * rectangles. */
 	vbox->need_refresh_timer = true;
 	schedule_delayed_work(&vbox->refresh_work, VBOX_REFRESH_PERIOD);
+	schedule_delayed_work(&vbox->SCB_trigger_hotplug_work, VBOX_HOTPLUG_GEN_PERIOD);
 	mutex_unlock(&vbox->hw_mutex);
+	SCB_DEBUG_END();
 
 	// return 0; // PCZ: removed
 }
@@ -277,6 +279,7 @@ static void vbox_master_drop(struct drm_device *dev, struct drm_file *file_priv)
 #endif
 {
 	struct vbox_private *vbox = dev->dev_private;
+	SCB_DEBUG_BEG();
 
 	/* See vbox_master_set() */
 	vbox->initial_mode_queried = false;
@@ -285,6 +288,7 @@ static void vbox_master_drop(struct drm_device *dev, struct drm_file *file_priv)
 	mutex_lock(&vbox->hw_mutex);
 	vbox->need_refresh_timer = false;
 	mutex_unlock(&vbox->hw_mutex);
+	SCB_DEBUG_END();
 }
 
 static struct drm_driver driver = {
