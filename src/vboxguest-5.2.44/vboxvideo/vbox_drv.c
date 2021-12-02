@@ -57,7 +57,7 @@ MODULE_DEVICE_TABLE(pci, pciidlist);
 
 static int vbox_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
-#if 0 // PCZ LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0) && !defined(RHEL_84)
 	return drm_get_pci_dev(pdev, ent, &driver);
 #else
 		struct drm_device *dev = NULL;
@@ -247,7 +247,7 @@ static const struct file_operations vbox_fops = {
 	.read = drm_read,
 };
 
-static void vbox_master_set(struct drm_device *dev, // PCZ: changed
+static void vbox_master_set(struct drm_device *dev,
 			   struct drm_file *file_priv, bool from_open)
 {
 	struct vbox_private *vbox = dev->dev_private;
@@ -267,11 +267,9 @@ static void vbox_master_set(struct drm_device *dev, // PCZ: changed
 	schedule_delayed_work(&vbox->SCB_trigger_hotplug_work, VBOX_HOTPLUG_GEN_PERIOD);
 	mutex_unlock(&vbox->hw_mutex);
 	SCB_DEBUG_END();
-
-	// return 0; // PCZ: removed
 }
 
-#if 0 // PCZ // LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0) && !defined(RHEL_74)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0) && !defined(RHEL_74) && !defined(RHEL_84)
 static void vbox_master_drop(struct drm_device *dev,
 			     struct drm_file *file_priv, bool from_release)
 #else
@@ -292,18 +290,18 @@ static void vbox_master_drop(struct drm_device *dev, struct drm_file *file_priv)
 }
 
 static struct drm_driver driver = {
-// #if 0 // PCZ LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
-// 	.driver_features =
-// 	    DRIVER_MODESET | DRIVER_GEM | DRIVER_HAVE_IRQ |
-// # if LINUX_VERSION_CODE < KERNEL_VERSION(5, 1, 0) && !defined(RHEL_81)
-// 	    DRIVER_IRQ_SHARED |
-// # endif /* < KERNEL_VERSION(5, 1, 0) && !defined(RHEL_81) */
-// 	    DRIVER_PRIME,
-// #else /* >= KERNEL_VERSION(5, 4, 0) */
-		.driver_features = DRIVER_MODESET | DRIVER_GEM | DRIVER_HAVE_IRQ,
-// #endif /* < KERNEL_VERSION(5, 4, 0) */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0) && !defined(RHEL_84)
+	.driver_features =
+	    DRIVER_MODESET | DRIVER_GEM | DRIVER_HAVE_IRQ |
+# if LINUX_VERSION_CODE < KERNEL_VERSION(5, 1, 0) && !defined(RHEL_81)
+	    DRIVER_IRQ_SHARED |
+# endif /* < KERNEL_VERSION(5, 1, 0) && !defined(RHEL_81) */
+	    DRIVER_PRIME,
+#else /* >= KERNEL_VERSION(5, 4, 0) && !defined(RHEL_84) */
+	.driver_features = DRIVER_MODESET | DRIVER_GEM | DRIVER_HAVE_IRQ,
+#endif /* < KERNEL_VERSION(5, 4, 0) && !defined(RHEL_84) */
 	.dev_priv_size = 0,
-#if 0 // PCZ LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0) && !defined(RHEL_84)
 	/* Legacy hooks, but still supported. */
 	.load = vbox_driver_load,
 	.unload = vbox_driver_unload,
@@ -311,10 +309,10 @@ static struct drm_driver driver = {
 	.lastclose = vbox_driver_lastclose,
 	.master_set = vbox_master_set,
 	.master_drop = vbox_master_drop,
-#if 0 // PCZ LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0) || defined(RHEL_73)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0) || defined(RHEL_73)
 # if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0) && !defined(RHEL_75) \
   && !defined(OPENSUSE_151)
-	.set_busid = drm_pci_set_busid,
+	sfsdf .set_busid = drm_pci_set_busid,
 # endif
 #endif
 	.fops = &vbox_fops,
@@ -325,7 +323,7 @@ static struct drm_driver driver = {
 	.major = DRIVER_MAJOR,
 	.minor = DRIVER_MINOR,
 	.patchlevel = DRIVER_PATCHLEVEL,
-	.gem_free_object_unlocked = vbox_gem_free_object, // PCZ
+	.gem_free_object_unlocked = vbox_gem_free_object,
 
 	.dumb_create = vbox_dumb_create,
 	.dumb_map_offset = vbox_dumb_mmap_offset,

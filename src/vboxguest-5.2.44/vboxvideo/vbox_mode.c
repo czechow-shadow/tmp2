@@ -351,13 +351,13 @@ static struct drm_encoder *drm_encoder_find(struct drm_device *dev, u32 id)
 static struct drm_encoder *vbox_best_single_encoder(struct drm_connector
 						    *connector)
 {
-#if 1 // PCZ LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0) || defined(RHEL_84)
 		struct drm_encoder *encoder;
 
 		/* There is only one encoder per connector */
 		drm_connector_for_each_possible_encoder(connector, encoder)
 			return encoder;
-#else /* KERNEL_VERSION < 5.5 */
+#else /* KERNEL_VERSION < 5.5 || defined(RHEL_84) */
 	int enc_id = connector->encoder_ids[0];
 
 	/* pick the encoder ids */
@@ -370,7 +370,7 @@ static struct drm_encoder *vbox_best_single_encoder(struct drm_connector
 # else
 		return drm_encoder_find(connector->dev, enc_id);
 # endif
-#endif /* KERNEL_VERSION < 5.5 */
+#endif /* KERNEL_VERSION < 5.5 || defined(RHEL_84) */
 	return NULL;
 }
 
@@ -502,7 +502,7 @@ static void vbox_set_edid(struct drm_connector *connector, int width,
 	for (i = 0; i < EDID_SIZE - 1; ++i)
 		sum += edid[i];
 	edid[EDID_SIZE - 1] = (0x100 - (sum & 0xFF)) & 0xFF;
-#if 1 // PCZ LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0) || defined(OPENSUSE_151) || defined(RHEL_77) || defined(RHEL_81)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0) || defined(OPENSUSE_151) || defined(RHEL_77) || defined(RHEL_81)
 	drm_connector_update_edid_property(connector, (struct edid *)edid);
 #else
 	drm_mode_connector_update_edid_property(connector, (struct edid *)edid);
@@ -838,11 +838,11 @@ static int vbox_cursor_set2(struct drm_crtc *crtc, struct drm_file *file_priv,
 			}
 			vbox_bo_unreserve(bo);
 		}
-		#if 1 // PCZ RTLNX_VER_MIN(5,9,0) || RTLNX_RHEL_MIN(8,4)
+#if defined(RHEL_84)
 		drm_gem_object_put(obj);
-		#else
+#else
 		drm_gem_object_put_unlocked(obj);
-		#endif
+#endif
 	} else {
 		DRM_ERROR("Cannot find cursor object %x for crtc\n", handle);
 		ret = -ENOENT;

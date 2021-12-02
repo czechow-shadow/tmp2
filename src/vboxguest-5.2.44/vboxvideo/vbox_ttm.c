@@ -299,14 +299,14 @@ int vbox_mm_init(struct vbox_private *vbox)
 		return ret;
 #endif
 	ret = ttm_bo_device_init(&vbox->ttm.bdev,
-#if 0 // PCZ LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0) && !defined(RHEL_77) && !defined(RHEL_81)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0) && !defined(RHEL_77) && !defined(RHEL_81) && !defined(RHEL_84)
 				 vbox->ttm.bo_global_ref.ref.object,
 #endif
 				 &vbox_bo_driver,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 15, 0) || defined(RHEL_71)
 				 dev->anon_inode->i_mapping,
 #endif
-#if 1 // PCZ LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0) || defined(RHEL_84)
 						dev->vma_offset_manager,
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(5, 2, 0) && !defined(RHEL_82)
 				 DRM_FILE_PAGE_OFFSET,
@@ -442,7 +442,7 @@ int vbox_bo_create(struct drm_device *dev, int size, int align,
 
 static inline u64 vbox_bo_gpu_offset(struct vbox_bo *bo)
 {
-#if 1 // PCZ RTLNX_VER_MIN(5,9,0) || RTLNX_RHEL_MIN(8,4)
+#if defined(RHEL_84)
 	return bo->bo.mem.start << PAGE_SHIFT;
 #else
 	return bo->bo.offset;

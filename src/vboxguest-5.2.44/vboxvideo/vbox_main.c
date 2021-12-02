@@ -44,7 +44,7 @@ static void vbox_user_framebuffer_destroy(struct drm_framebuffer *fb)
 
 	SCB_DEBUG_BEG();
 	if (vbox_fb->obj)
-	  drm_gem_object_put(vbox_fb->obj); // PCZ: was: drm_gem_object_put_unlocked(vbox_fb->obj);
+	  drm_gem_object_put(vbox_fb->obj);
 	drm_framebuffer_cleanup(fb);
 	kfree(fb);
 	SCB_DEBUG_END();
@@ -218,13 +218,13 @@ static struct drm_framebuffer *vbox_user_framebuffer_create(
 
 	vbox_fb = kzalloc(sizeof(*vbox_fb), GFP_KERNEL);
 	if (!vbox_fb) {
-		drm_gem_object_put(obj); // PCZ: was: drm_gem_object_put_unlocked(obj);
+		drm_gem_object_put(obj);
 		return ERR_PTR(-ENOMEM);
 	}
 
 	ret = vbox_framebuffer_init(dev, vbox_fb, mode_cmd, obj);
 	if (ret) {
-		drm_gem_object_put(obj); // PCZ: was: drm_gem_object_put_unlocked(obj);
+		drm_gem_object_put(obj);
 		kfree(vbox_fb);
 		return ERR_PTR(ret);
 	}
@@ -602,7 +602,7 @@ int vbox_dumb_create(struct drm_file *file,
 		return ret;
 
 	ret = drm_gem_handle_create(file, gobj, &handle);
-	drm_gem_object_put(gobj); // PCZ: was: drm_gem_object_put_unlocked(gobj);
+	drm_gem_object_put(gobj);
 	if (ret)
 		return ret;
 
@@ -635,13 +635,13 @@ void vbox_gem_free_object(struct drm_gem_object *obj)
 
 static inline u64 vbox_bo_mmap_offset(struct vbox_bo *bo)
 {
-#if 1 // PCZ: LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0) || defined(RHEL_84)
 		return drm_vma_node_offset_addr(&bo->bo.base.vma_node);
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 12, 0) && !defined(RHEL_70)
 	return bo->bo.addr_space_offset;
 #else
 	return drm_vma_node_offset_addr(&bo->bo.vma_node);
-#endif /* >= KERNEL_VERSION(5, 4, 0) */
+#endif /* >= KERNEL_VERSION(5, 4, 0) || defined(RHEL_84) */
 }
 
 int
