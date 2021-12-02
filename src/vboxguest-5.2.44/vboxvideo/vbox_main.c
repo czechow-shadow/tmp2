@@ -359,23 +359,34 @@ static void vbox_refresh_timer(struct work_struct *work)
 												 refresh_work.work);
 	bool have_unblanked = false;
 	struct drm_crtc *crtci;
-	SCB_DEBUG("TIMER TRIGGERED");
-	schedule_work(&vbox->hotplug_work);
 
-  // FIXME: NOW
-	/* if (!vbox->need_refresh_timer) */
-	/* 	return; */
-	/* list_for_each_entry(crtci, &vbox->dev->mode_config.crtc_list, head) { */
-	/* 	struct vbox_crtc *vbox_crtc = to_vbox_crtc(crtci); */
-	/* 	if (crtci->enabled && !vbox_crtc->blanked) */
-	/* 		have_unblanked = true; */
-	/* } */
-	/* if (!have_unblanked) */
-	/* 	return; */
-	/* /\* This forces a full refresh. *\/ */
-	/* vbox_enable_accel(vbox); */
-	/* /\* Schedule the next timer iteration. *\/ */
+	if (!vbox->need_refresh_timer)
+		return;
+	list_for_each_entry(crtci, &vbox->dev->mode_config.crtc_list, head) {
+		struct vbox_crtc *vbox_crtc = to_vbox_crtc(crtci);
+		if (crtci->enabled && !vbox_crtc->blanked)
+			have_unblanked = true;
+	}
+	if (!have_unblanked)
+		return;
+	/* This forces a full refresh. */
+	vbox_enable_accel(vbox);
+	/* Schedule the next timer iteration. */
 	schedule_delayed_work(&vbox->refresh_work, VBOX_REFRESH_PERIOD);
+}
+
+// SCB: This timer machinery is a workaround of IRQs not being
+// triggered by a video card on "dimension change". Ideally "dimension
+// change" should be handled in vbox_irq_handler (invoked on an IRQ).
+static void vbox_scb_fake_hotplug_timer(struct work_struct *work)
+{
+	struct vbox_private *vbox = container_of(work,
+						 struct vbox_private,
+						 SCB_trigger_hotplug_work.work);
+	SCB_DEBUG("fake hotplug timer trigerred");
+	// Pretend we have had some dimension change and schedule hotplug work.
+	schedule_work(&vbox->hotplug_work);
+	schedule_delayed_work(&vbox->SCB_trigger_hotplug_work, VBOX_HOTPLUG_GEN_PERIOD);
 }
 
 /**
@@ -430,6 +441,9 @@ static int vbox_hw_init(struct vbox_private *vbox)
 		return ret;
 	/* Set up the refresh timer for users which do not send dirty rectangles. */
 	INIT_DELAYED_WORK(&vbox->refresh_work, vbox_refresh_timer);
+	/* Set up the timer to simulate hotplug events */
+	INIT_DELAYED_WORK(&vbox->SCB_trigger_hotplug_work,
+			  vbox_scb_fake_hotplug_timer);
 	SCB_DEBUG_END();
 	return 0;
 }
@@ -438,6 +452,7 @@ static void vbox_hw_fini(struct vbox_private *vbox)
 {
 	vbox->need_refresh_timer = false;
 	cancel_delayed_work(&vbox->refresh_work);
+	cancel_delayed_work(&vbox->SCB_trigger_hotplug_work);
 	vbox_accel_fini(vbox);
 	kfree(vbox->last_mode_hints);
 	vbox->last_mode_hints = NULL;

@@ -176,7 +176,8 @@ static inline void drm_gem_object_put(struct drm_gem_object *obj)
 #define HOST_FLAGS_OFFSET GUEST_HEAP_USABLE_SIZE
 
 /** How frequently we refresh if the guest is not providing dirty rectangles. */
-#define VBOX_REFRESH_PERIOD (10 * (HZ / 2))
+#define VBOX_REFRESH_PERIOD (HZ / 2)
+#define VBOX_HOTPLUG_GEN_PERIOD HZ
 
 struct vbox_fbdev;
 
@@ -228,6 +229,8 @@ struct vbox_private {
 	 */
 	struct delayed_work refresh_work;
 	struct work_struct hotplug_work;
+        // SCB: Used triggering hotplug work (since IRQ's do not work)
+        struct delayed_work SCB_trigger_hotplug_work;
 	u32 input_mapping_width;
 	u32 input_mapping_height;
 	/**
