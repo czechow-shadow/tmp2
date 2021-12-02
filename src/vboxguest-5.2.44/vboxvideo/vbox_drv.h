@@ -46,6 +46,9 @@
 #include <linux/pci.h>
 
 #if defined(RHEL_MAJOR) && defined(RHEL_MINOR)
+# if RHEL_MAJOR == 8 && RHEL_MINOR >= 4
+#  define RHEL_84
+# endif
 # if RHEL_MAJOR == 8 && RHEL_MINOR >= 2
 #  define RHEL_82
 # endif
@@ -102,9 +105,9 @@
 #define S64_MIN         ((s64)(-S64_MAX - 1))
 #endif
 
-#if 0 // PCZ // LINUX_VERSION_CODE < KERNEL_VERSION(5, 5, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 5, 0) && !defined(RHEL_84)
 #include <drm/drmP.h>
-#else /* >= KERNEL_VERSION(5, 5, 0) */
+#else /* >= KERNEL_VERSION(5, 5, 0) && !defined(RHEL_84) */
 #include <drm/drm_file.h>
 #include <drm/drm_drv.h>
 #include <drm/drm_device.h>
@@ -112,8 +115,10 @@
 #include <drm/drm_fourcc.h>
 #include <drm/drm_irq.h>
 #include <drm/drm_vblank.h>
-// #include <drm/drm_pci.h> // PCZ
-#endif /* >= KERNEL_VERSION(5, 5, 0) */
+# if !defined(RHEL_84)
+#include <drm/drm_pci.h>
+# endif
+#endif /* >= KERNEL_VERSION(5, 5, 0) && !defined(RHEL_84) */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0) || defined(RHEL_72)
 #include <drm/drm_gem.h>
@@ -249,12 +254,12 @@ struct vbox_private {
 #undef CURSOR_PIXEL_COUNT
 #undef CURSOR_DATA_SIZE
 
-#if 0 // PCZ // LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0) && !defined(RHEL_84)
 int vbox_driver_load(struct drm_device *dev, unsigned long flags);
 #else
 int vbox_driver_load(struct drm_device *dev);
 #endif
-#if 1 // PCZ LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0) || defined(RHEL_75)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0) || defined(RHEL_75)
 void vbox_driver_unload(struct drm_device *dev);
 #else
 int vbox_driver_unload(struct drm_device *dev);
