@@ -383,7 +383,7 @@ static void vbox_scb_fake_hotplug_timer(struct work_struct *work)
 	struct vbox_private *vbox = container_of(work,
 						 struct vbox_private,
 						 SCB_trigger_hotplug_work.work);
-	SCB_DEBUG("fake hotplug timer trigerred");
+	SCB_DEBUG("fake hotplug timer triggered");
 	// Pretend we have had some dimension change and schedule hotplug work.
 	schedule_work(&vbox->hotplug_work);
 	schedule_delayed_work(&vbox->SCB_trigger_hotplug_work, VBOX_HOTPLUG_GEN_PERIOD);
