@@ -40,6 +40,7 @@
 #include <drm/drm_crtc_helper.h>
 
 int vbox_modeset = -1;
+bool scb_debug = 0;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0) || defined(RHEL_81)
 #include <drm/drm_probe_helper.h>
@@ -47,6 +48,9 @@ int vbox_modeset = -1;
 
 MODULE_PARM_DESC(modeset, "Disable/Enable modesetting");
 module_param_named(modeset, vbox_modeset, int, 0400);
+
+MODULE_PARM_DESC(debug, "Disable/Enable SCB debug");
+module_param_named(debug, scb_debug, bool, 0664);
 
 static struct drm_driver driver;
 
